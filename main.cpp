@@ -12,6 +12,7 @@
 static const QStringList IMAGE_NAME_FILTERS("*");
 static const QString IMAGE_TIMESTAMP_TAG("Exif.Photo.DateTimeOriginal");
 
+static const QString TUMBLR_FILTER_2("^tumblr_[\\w]{19}_[0-9]{3}\\.(?i)(jpe?g|png|gif|bmp)$");
 static const QString TUMBLR_FILTER_3("^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(?i)(jpe?g|png|gif|bmp))$");
 
 int main()
@@ -35,6 +36,11 @@ int main()
     int image_files_count = image_files.count();
     int images_renamed = 0;
 
+    // Build image filter list.
+    QStringList image_filters;
+    image_filters << TUMBLR_FILTER_2
+                  << TUMBLR_FILTER_3;
+
     foreach (const QFileInfo &image_file, image_files)
     {
         qDebug() << "----------------";
@@ -46,9 +52,20 @@ int main()
         qDebug() << "Current image:" << qPrintable(image_name);
 
         // Check if the current image needs to be renamed.
-        QRegularExpression regular_expression(TUMBLR_FILTER_3);
-        QRegularExpressionMatch regular_expression_match = regular_expression.match(image_name);
-        if (!regular_expression_match.hasMatch())
+        bool image_filter_match = false;
+        foreach (const QString &image_filter, image_filters)
+        {
+            QRegularExpression regular_expression(image_filter);
+            QRegularExpressionMatch regular_expression_match = regular_expression.match(image_name);
+            if (regular_expression_match.hasMatch())
+            {
+                image_filter_match = true;
+
+                continue;
+            }
+        }
+
+        if (!image_filter_match)
         {
             qWarning() << "WARNING> File" << image_name << "doesn't match any of the filters, skipping...";
 
