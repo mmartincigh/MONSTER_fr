@@ -2,7 +2,7 @@ TARGET = MONSTER_fr
 
 TEMPLATE = app
 
-VERSION = 0.2.1
+VERSION = 0.2.2
 
 QT += \
     core \

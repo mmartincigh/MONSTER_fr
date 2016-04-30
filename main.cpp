@@ -1,6 +1,5 @@
-//#include <QCoreApplication>
-
 // Qt
+#include <QCoreApplication>
 #include <QDir>
 #include <QDateTime>
 #include <QRegularExpressionMatch>
@@ -9,15 +8,18 @@
 // Exiv2
 #include <exiv2/exiv2.hpp>
 
-static const QStringList IMAGE_NAME_FILTERS("*");
 static const QString IMAGE_TIMESTAMP_TAG("Exif.Photo.DateTimeOriginal");
 
 static const QString TUMBLR_FILTER_2("^tumblr_[\\w]{19}_[0-9]{3}\\.(?i)(jpe?g|png|gif|bmp)$");
 static const QString TUMBLR_FILTER_3("^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(?i)(jpe?g|png|gif|bmp))$");
 
-int main()
+int main(int argc, char *argv[])
 {
-    qDebug().nospace() << "MONSTER_fr v" << SW_VERSION;
+    QCoreApplication application(argc, argv);
+    application.setApplicationName("MONSTER_fr");
+    application.setApplicationVersion(SW_VERSION);
+
+    qDebug().nospace() << "MONSTER_fr v" << qPrintable(application.applicationVersion());
 
     setbuf(stdout, NULL);
 
@@ -32,7 +34,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    QFileInfoList image_files = working_directory.entryInfoList(IMAGE_NAME_FILTERS, QDir::Files, QDir::Name);
+    QFileInfoList image_files = working_directory.entryInfoList(QDir::Files, QDir::Name);
     int image_files_count = image_files.count();
     int images_renamed = 0;
 
