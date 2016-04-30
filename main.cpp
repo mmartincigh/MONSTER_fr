@@ -9,26 +9,29 @@
 // Exiv2
 #include <exiv2/exiv2.hpp>
 
+static const QStringList IMAGE_NAME_FILTERS("*");
+static const QString IMAGE_TIMESTAMP_TAG("Exif.Photo.DateTimeOriginal");
+
 static const QString TUMBLR_FILTER_3("^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(?i)(jpe?g|png|gif|bmp))$");
 
-//int main(int argc, char *argv[])
 int main()
 {
-    //QCoreApplication application(argc, argv);
-
-    //return application.exec();
-
-    qDebug() << "MONSTER_fr";
+    qDebug().nospace() << "MONSTER_fr v" << SW_VERSION;
 
     setbuf(stdout, NULL);
 
-    //QDir working_directory = QDir::current();
     QDir working_directory("D:\\Dropbox\\Tumblr\\Temp");
 
-    qDebug() << "Current directory:" << working_directory.path();
+    qDebug() << "Working directory:" << qPrintable(working_directory.path());
 
-    QStringList name_filters("*.jpg");
-    QFileInfoList image_files = working_directory.entryInfoList(name_filters, QDir::Files, QDir::Name);
+    if (!working_directory.exists())
+    {
+        qCritical() << "ERROR> Working directory" << working_directory.path() << "does not exist";
+
+        return EXIT_FAILURE;
+    }
+
+    QFileInfoList image_files = working_directory.entryInfoList(IMAGE_NAME_FILTERS, QDir::Files, QDir::Name);
     int image_files_count = image_files.count();
     int images_renamed = 0;
 
@@ -47,7 +50,7 @@ int main()
         QRegularExpressionMatch regular_expression_match = regular_expression.match(image_name);
         if (!regular_expression_match.hasMatch())
         {
-            qWarning() << "File" << image_name << "doesn't match any of the filters, skipping...";
+            qWarning() << "WARNING> File" << image_name << "doesn't match any of the filters, skipping...";
 
             continue;
         }
@@ -55,7 +58,6 @@ int main()
         try
         {
             std::string image_absolute_path_string = image_absolute_path.toStdString();
-            //std::string image_absolute_path_string = "D:\\Workspaces\\C++\\build-MONSTER_fr-Desktop_Qt_5_5_1_msvc2010-Debug\\2016-04-09 17.05.15.jpg";
             Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(image_absolute_path_string);
             if (image.get() == NULL)
             {
@@ -66,32 +68,28 @@ int main()
 
             image->readMetadata();
             Exiv2::ExifData &exif_data = image->exifData();
-            Exiv2::ExifKey exif_key("Exif.Photo.DateTimeOriginal");
+            Exiv2::ExifKey exif_key(IMAGE_TIMESTAMP_TAG.toStdString());
             Exiv2::ExifData::const_iterator pos = exif_data.findKey(exif_key);
-            //std::cout << std::setw(20) << std::left << "Image timestamp";
             if (pos != exif_data.end())
             {
-                /*std::cout << " (" << std::setw(35) << pos->key() << ") : "
-                          << pos->print(&exif_data) << "\n";*/
-                //QString exif_data_vale = QString::fromUtf8(reinterpret_cast<char *>(pos->value()));
                 QString exif_data_value = QString::fromStdString(pos->toString());
-                //qDebug() << "Image timestamp:" << qPrintable(exif_data_value);
                 QStringList exif_data_image_timestamp_date_time_split = exif_data_value.split(' ');
                 if (exif_data_image_timestamp_date_time_split.size() < 2)
                 {
-                    qWarning() << "Invalid image timestamp";
+                    qWarning() << "WARNING> Invalid image timestamp";
 
                     continue;
                 }
+
                 QString exif_data_image_timestamp_date = exif_data_image_timestamp_date_time_split.at(0);
                 exif_data_image_timestamp_date.replace(':', '-');
                 QString exif_data_image_timestamp_time = exif_data_image_timestamp_date_time_split.at(1);
                 exif_data_image_timestamp_time.replace(':', '.');
                 exif_data_image_timestamp = exif_data_image_timestamp_date + " " + exif_data_image_timestamp_time;
             }
-            else {
-                /*std::cout << " (" << std::setw(35) << " " << ") : \n";*/
-                qDebug() << "No image timestamp, using the last modified time...";
+            else
+            {
+                qDebug() << "No image timestamp, using file attributes...";
 
                 QDateTime image_file_last_modified_time = image_file.lastModified();
                 exif_data_image_timestamp = image_file_last_modified_time.toString("yyyy-MM-dd HH.mm.ss");
@@ -99,7 +97,7 @@ int main()
         }
         catch (Exiv2::AnyError &e)
         {
-            std::cout << "Caught Exiv2 exception '" << e << "'\n";
+            qCritical() << "ERROR> Caught Exiv2 exception:" << e.what();
 
             return EXIT_FAILURE;
         }
@@ -114,7 +112,7 @@ int main()
         QFileInfo new_image_file_info(new_image_file_name);
         if (new_image_file_info.exists())
         {
-            qWarning() << "File" << new_image_name << "already exists, skipping...";
+            qWarning() << "WARNING> File" << new_image_name << "already exists, skipping...";
 
             continue;
         }
@@ -124,7 +122,7 @@ int main()
         bool ret_val = new_image_file.rename(working_directory.filePath(new_image_name));
         if (!ret_val)
         {
-            qWarning() << "Cannot rename file to:" << qPrintable(new_image_name);
+            qWarning() << "WARNING> Cannot rename file to:" << qPrintable(new_image_name);
 
             continue;
         }

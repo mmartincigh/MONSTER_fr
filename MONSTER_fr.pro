@@ -2,7 +2,7 @@ TARGET = MONSTER_fr
 
 TEMPLATE = app
 
-VERSION = 0.1.0
+VERSION = 0.2.0
 
 QT += \
     core \
@@ -13,6 +13,9 @@ QT -= \
 CONFIG += \
     c++11 \
     console
+
+DEFINES += \
+    SW_VERSION=\\\"$$VERSION\\\"
 
 INCLUDEPATH += \
     "$$PWD/include"
