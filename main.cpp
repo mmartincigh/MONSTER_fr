@@ -8,10 +8,20 @@
 // Exiv2
 #include <exiv2/exiv2.hpp>
 
-static const QString IMAGE_TIMESTAMP_TAG("Exif.Photo.DateTimeOriginal");
+static const QString DEFAULT_WORKING_DIRECTORY  ("D:\\Dropbox\\Tumblr\\Temp");
 
-static const QString TUMBLR_FILTER_2("^tumblr_[\\w]{19}_[0-9]{3}\\.(?i)(jpe?g|png|gif|bmp)$");
-static const QString TUMBLR_FILTER_3("^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(?i)(jpe?g|png|gif|bmp))$");
+static const QString IMAGE_TIMESTAMP_TAG        ("Exif.Photo.DateTimeOriginal");
+
+static const QString TUMBLR_FILTER_1            ("^https?%[0-9a-fA-F]{2}%[0-9a-fA-F]{2}%[0-9a-fA-F]{4}.media.tumblr.com(%[0-9a-fA-F]{34})?%[0-9a-fA-F]{2}tumblr_[0-9a-zA-Z]{19}(_.{2})?_[0-9]{3,4}\\.(?i)(jpe?g|png|gif|bmp)$");
+static const QString TUMBLR_FILTER_2            ("^tumblr_[\\w]{19}_[0-9]{3}\\.(?i)(jpe?g|png|gif|bmp)$");
+static const QString TUMBLR_FILTER_3            ("^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(?i)(jpe?g|png|gif|bmp))$");
+static const QString PHONEGRAM_FILTER           ("^IMG_[0-9]{8}_[0-9]{6}_[0-9]{3}\\.(?i)(jpe?g|png|gif|bmp)$");
+static const QString TELEGRAM_FILTER            ("^[0-9]{9}_[0-9]{5,6}\\.(?i)(jpe?g|png|gif|bmp)$");
+static const QString RUNKEEPER_APP_FILTER       ("^[0-9]{13}\\.(?i)(jpe?g|png|gif|bmp)$");
+static const QString RUNKEEPER_WEB_FILTER       ("^[\\w]{24}\\.(?i)(jpe?g|png|gif|bmp)$");
+static const QString FLIPBOARD_FILTER           ("^[0-9a-fA-F]{40}\\.(?i)(jpe?g|png|gif|bmp)$");
+static const QString GOOGLE_IMAGES_FILTER       ("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(?i)(jpe?g|png|gif|bmp)$");
+static const QString ANDROID_FILTER             ("^IMG_[0-9]{8}_[0-9]{6}\\.(?i)(jpe?g|png|gif|bmp)$");
 
 int main(int argc, char *argv[])
 {
@@ -21,9 +31,20 @@ int main(int argc, char *argv[])
 
     qDebug().nospace() << "MONSTER_fr v" << qPrintable(application.applicationVersion());
 
-    setbuf(stdout, NULL);
+    QDir working_directory(DEFAULT_WORKING_DIRECTORY);
 
-    QDir working_directory("D:\\Dropbox\\Tumblr\\Temp");
+    if (application.arguments().count() > 1)
+    {
+        qDebug() << "Processing argument:" << qPrintable(application.arguments().at(1));
+
+        working_directory = application.arguments().at(1);
+        if (!working_directory.exists())
+        {
+            qWarning() << "WARNING> Passed working directory" << working_directory.path() << "does not exist";
+
+            return EXIT_FAILURE;
+        }
+    }
 
     qDebug() << "Working directory:" << qPrintable(working_directory.path());
 
@@ -40,8 +61,16 @@ int main(int argc, char *argv[])
 
     // Build image filter list.
     QStringList image_filters;
-    image_filters << TUMBLR_FILTER_2
-                  << TUMBLR_FILTER_3;
+    image_filters << TUMBLR_FILTER_1
+                  << TUMBLR_FILTER_2
+                  << TUMBLR_FILTER_3
+                  << PHONEGRAM_FILTER
+                  << TELEGRAM_FILTER
+                  << RUNKEEPER_APP_FILTER
+                  << RUNKEEPER_WEB_FILTER
+                  << FLIPBOARD_FILTER
+                  << GOOGLE_IMAGES_FILTER
+                  << ANDROID_FILTER;
 
     foreach (const QFileInfo &image_file, image_files)
     {
