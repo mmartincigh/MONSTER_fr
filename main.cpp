@@ -8,8 +8,6 @@
 // Exiv2
 #include <exiv2/exiv2.hpp>
 
-static const QString DEFAULT_WORKING_DIRECTORY  ("D:\\Dropbox\\Tumblr\\Temp");
-
 static const QString IMAGE_TIMESTAMP_TAG        ("Exif.Photo.DateTimeOriginal");
 
 static const QString TUMBLR_FILTER_1            ("^https?%[0-9a-fA-F]{2}%[0-9a-fA-F]{2}%[0-9a-fA-F]{4}.media.tumblr.com(%[0-9a-fA-F]{34})?%[0-9a-fA-F]{2}tumblr_[0-9a-zA-Z]{19}(_.{2})?_[0-9]{3,4}\\.(?i)(jpe?g|png|gif|bmp)$");
@@ -24,6 +22,16 @@ static const QString GOOGLE_IMAGES_FILTER       ("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}
 static const QString ANDROID_FILTER             ("^IMG_[0-9]{8}_[0-9]{6}\\.(?i)(jpe?g|png|gif|bmp)$");
 
 static QStringList FILE_FILTERS;
+
+static int total_file_count                     (0);
+static int renamed_file_count                   (0);
+
+enum FileRename_RetVal
+{
+    FileRename_Success,
+    FileRename_Skipped,
+    FileRename_Error
+};
 
 int parseArguments(const QStringList &arguments, QList<QDir> &directories, QFileInfoList &files)
 {
@@ -54,6 +62,8 @@ int parseArguments(const QStringList &arguments, QList<QDir> &directories, QFile
         // Check whether the argument is a directory.
         if (argument_file_info.isDir())
         {
+            qDebug() << "Directory";
+
             // Append the argument to the list of directories.
             directories.append(QDir(argument));
         }
@@ -61,6 +71,8 @@ int parseArguments(const QStringList &arguments, QList<QDir> &directories, QFile
         // Check whether the argument is a file.
         else if (argument_file_info.isFile())
         {
+            qDebug() << "File";
+
             // Append the argument to the list of files.
             files.append(argument_file_info);
         }
@@ -69,7 +81,7 @@ int parseArguments(const QStringList &arguments, QList<QDir> &directories, QFile
     return 0;
 }
 
-int renameFile(const QFileInfo &file)
+FileRename_RetVal renameFile(const QFileInfo &file)
 {
     QString file_name = file.fileName();
 
@@ -90,10 +102,13 @@ int renameFile(const QFileInfo &file)
     }
     if (!file_filter_match)
     {
-        qWarning() << "WARNING> File" << file_name << "doesn't match any of the filters, skipping...";
+        qDebug() << "File" << file_name << "doesn't match any of the filters, skipping...";
 
-        return -1;
+        return FileRename_Skipped;
     }
+
+    // Increase the number of total files to rename.
+    total_file_count++;
 
     QString file_absolute_path = file.absoluteFilePath();
     QString exif_data_image_timestamp;
@@ -105,7 +120,7 @@ int renameFile(const QFileInfo &file)
         {
             qWarning() << "WARNING> Cannot load image:" << qPrintable(file_name);
 
-            return -2;
+            return FileRename_Error;
         }
 
         image->readMetadata();
@@ -120,7 +135,7 @@ int renameFile(const QFileInfo &file)
             {
                 qWarning() << "WARNING> Invalid image timestamp";
 
-                return -3;
+                return FileRename_Error;
             }
 
             QString exif_data_image_timestamp_date = exif_data_image_timestamp_date_time_split.at(0);
@@ -141,7 +156,7 @@ int renameFile(const QFileInfo &file)
     {
         qCritical() << "ERROR> Caught Exiv2 exception:" << e.what();
 
-        return -4;
+        return FileRename_Error;
     }
 
     qDebug() << "Image timestamp:" << qPrintable(exif_data_image_timestamp);
@@ -155,9 +170,9 @@ int renameFile(const QFileInfo &file)
     QFileInfo new_image_file_info(new_image_file_name);
     if (new_image_file_info.exists())
     {
-        qWarning() << "WARNING> File" << new_image_name << "already exists, skipping...";
+        qWarning() << "WARNING> File" << new_image_name << "already exists";
 
-        return -5;
+        return FileRename_Error;
     }
 
     // Rename the file.
@@ -167,31 +182,34 @@ int renameFile(const QFileInfo &file)
     {
         qWarning() << "WARNING> Cannot rename file to:" << qPrintable(new_image_name);
 
-        return -6;
+        return FileRename_Error;
     }
 
     qDebug() << "File renamed to:" << qPrintable(new_image_file_info.absoluteFilePath());
 
-    return 0;
+    qDebug().nospace() << "Files renamed: " << ++renamed_file_count << "/" << total_file_count;
+
+    return FileRename_Success;
 }
 
 int renameFiles(const QDir &directory)
 {
     QFileInfoList files = directory.entryInfoList(QDir::Files, QDir::Name);
-    //int image_files_count = image_files.count();
-    //int images_renamed = 0;
 
     foreach (const QFileInfo &file, files)
     {
         qDebug() << "----------------";
 
-        int ret_val = renameFile(file);
-        if (ret_val < 0)
+        FileRename_RetVal ret_val = renameFile(file);
+        switch (ret_val)
         {
+        case FileRename_Success:
+        case FileRename_Skipped:
+            break;
+        case FileRename_Error:
+        default:
             qWarning() << "WARNING> Cannot rename file:" << qPrintable(file.fileName());
         }
-
-        //qDebug().nospace() << ++images_renamed << "/" << image_files_count;
     }
 
     return 0;
@@ -217,8 +235,6 @@ int main(int argc, char *argv[])
                  << GOOGLE_IMAGES_FILTER
                  << ANDROID_FILTER;
 
-    QDir working_directory(DEFAULT_WORKING_DIRECTORY);
-
     // Parse arguments.
     QList<QDir> directories;
     QFileInfoList files;
@@ -226,15 +242,6 @@ int main(int argc, char *argv[])
     if (ret_val < 0)
     {
         qCritical() << "ERROR> Error parsing arguments";
-
-        return EXIT_FAILURE;
-    }
-
-    qDebug() << "Working directory:" << qPrintable(working_directory.path());
-
-    if (!working_directory.exists())
-    {
-        qCritical() << "ERROR> Working directory" << working_directory.path() << "does not exist";
 
         return EXIT_FAILURE;
     }
@@ -265,7 +272,9 @@ int main(int argc, char *argv[])
 
     qDebug() << "================";
 
+    qDebug().nospace() << "Files renamed: " << renamed_file_count << "/" << total_file_count;
+
     qDebug() << "Done";
 
-    return EXIT_SUCCESS;
+    return renamed_file_count == total_file_count ? EXIT_SUCCESS : EXIT_FAILURE;
 }
