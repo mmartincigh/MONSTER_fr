@@ -2,7 +2,7 @@ TARGET = MONSTER_fr
 
 TEMPLATE = app
 
-VERSION = 0.3.1
+VERSION = 1.0.0
 
 QT += \
     core \
@@ -49,7 +49,19 @@ win32 {
     RC_ICONS = 1UpMushroom256x256.ico
 }
 
+HEADERS += \
+    applicationmanager.h \
+    applicationutils.h \
+    base.h \
+    filerenamer.h \
+    logmanager.h
+
 SOURCES += \
+    applicationmanager.cpp \
+    applicationutils.cpp \
+    base.cpp \
+    filerenamer.cpp \
+    logmanager.cpp \
     main.cpp
 
 win32 {
