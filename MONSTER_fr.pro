@@ -2,7 +2,7 @@ TARGET = MONSTER_fr
 
 TEMPLATE = app
 
-VERSION = 1.0.0
+VERSION = 2.0.0
 
 QT += \
     core \
@@ -32,14 +32,26 @@ INCLUDEPATH += \
 
 win32 {
     CONFIG(debug, debug|release) {
-        # Windows x86 (32bit) debug
-        LIBS += \
-            -L"$$PWD/lib/win/x86/debug"
+        contains(QMAKE_TARGET.arch, x86_64) {
+            # Windows x64 (64bit) debug
+            LIBS += \
+                -L"$$PWD/lib/win/x64/debug"
+        } else {
+            # Windows x86 (32bit) debug
+            LIBS += \
+                -L"$$PWD/lib/win/x86/debug"
+        }
     }
     CONFIG(release, debug|release) {
-        # Windows x86 (32bit) release
-        LIBS += \
-            -L"$$PWD/lib/win/x86/release"
+        contains(QMAKE_TARGET.arch, x86_64) {
+            # Windows x64 (64bit) release
+            LIBS += \
+                -L"$$PWD/lib/win/x64/release"
+        } else {
+            # Windows x86 (32bit) release
+            LIBS += \
+                -L"$$PWD/lib/win/x86/release"
+        }
     }
     LIBS += \
         -llibexiv2 -lxmpsdk -lzlib1 -llibexpat

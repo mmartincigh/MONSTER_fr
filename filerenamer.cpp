@@ -198,7 +198,7 @@ FileRenamer::FileRename_RetVal FileRenamer::renameFile(const QFileInfo &file)
     QFileInfo new_image_file_info(new_image_file_name);
     if (new_image_file_info.exists())
     {
-        this->warning("File " + new_image_name + "already exists");
+        this->warning("File " + new_image_name + " already exists");
 
         return FileRename_Error;
     }
