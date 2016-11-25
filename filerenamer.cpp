@@ -200,7 +200,36 @@ FileRenamer::FileRename_RetVal FileRenamer::renameFile(const QFileInfo &file)
     {
         this->warning("File " + new_image_name + " already exists");
 
-        return FileRename_Error;
+        // Try with subsequent timestamps for a minute.
+        this->debug("Trying with subsequent timestamps...");
+        bool new_image_file_name_found = false;
+        QDateTime current_image_timestamp = QDateTime::fromString(exif_data_image_timestamp, "yyyy-MM-dd HH.mm.ss");
+        for (int i = 0; i < 60; i++)
+        {
+            current_image_timestamp = current_image_timestamp.addSecs(1);
+
+            exif_data_image_timestamp = current_image_timestamp.toString("yyyy-MM-dd HH.mm.ss");
+
+            //this->debug("Image timestamp: " + exif_data_image_timestamp);
+
+            new_image_name = exif_data_image_timestamp + "." + file.completeSuffix();
+
+            this->debug("New image name: "+ new_image_name);
+
+            new_image_file_name = file_absolute_directory.filePath(new_image_name);
+            new_image_file_info.setFile(new_image_file_name);
+            if (!new_image_file_info.exists())
+            {
+                new_image_file_name_found = true;
+
+                break;
+            }
+        }
+
+        if (!new_image_file_name_found)
+        {
+            return FileRename_Error;
+        }
     }
 
     // Rename the file.
