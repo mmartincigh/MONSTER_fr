@@ -10,8 +10,9 @@
 
 const QString FileRenamer::m_IMAGE_TIMESTAMP_TAG("Exif.Photo.DateTimeOriginal");
 const QString FileRenamer::m_TUMBLR_FILTER_1("^https?%[0-9a-fA-F]{2}%[0-9a-fA-F]{2}%[0-9a-fA-F]{4}.media.tumblr.com(%[0-9a-fA-F]{34})?%[0-9a-fA-F]{2}tumblr_[0-9a-zA-Z]{19}(_.{2})?_[0-9]{3,4}\\.(?i)(jpe?g|png|gif|bmp)$");
-const QString FileRenamer::m_TUMBLR_FILTER_2("^tumblr_[\\w]{19}_[0-9]{3}\\.(?i)(jpe?g|png|gif|bmp)$");
-const QString FileRenamer::m_TUMBLR_FILTER_3("^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(?i)(jpe?g|png|gif|bmp))$");
+const QString FileRenamer::m_TUMBLR_FILTER_2("^tumblr_[\\w]{19}_[0-9]{3,4}\\.(?i)(jpe?g|png|gif|bmp)$");
+const QString FileRenamer::m_TUMBLR_FILTER_3("^tumblr_[\\w]{19,20}_[\\w]{2}_[0-9]{3}\\.(?i)(jpe?g|png|gif|bmp)$");
+const QString FileRenamer::m_TUMBLR_FILTER_4("^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(?i)(jpe?g|png|gif|bmp))$");
 const QString FileRenamer::m_PHONEGRAM_FILTER("^IMG_[0-9]{8}_[0-9]{6}_[0-9]{3}\\.(?i)(jpe?g|png|gif|bmp)$");
 const QString FileRenamer::m_TELEGRAM_FILTER("^[0-9]{9}_[0-9]{5,6}\\.(?i)(jpe?g|png|gif|bmp)$");
 const QString FileRenamer::m_RUNKEEPER_APP_FILTER("^[0-9]{13}\\.(?i)(jpe?g|png|gif|bmp)$");
@@ -29,6 +30,7 @@ FileRenamer::FileRenamer(QObject *parent) :
     m_fileFilters << m_TUMBLR_FILTER_1
                   << m_TUMBLR_FILTER_2
                   << m_TUMBLR_FILTER_3
+                  << m_TUMBLR_FILTER_4
                   << m_PHONEGRAM_FILTER
                   << m_TELEGRAM_FILTER
                   << m_RUNKEEPER_APP_FILTER

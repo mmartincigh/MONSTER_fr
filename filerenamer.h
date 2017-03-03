@@ -16,6 +16,7 @@ private:
     static const QString m_TUMBLR_FILTER_1;
     static const QString m_TUMBLR_FILTER_2;
     static const QString m_TUMBLR_FILTER_3;
+    static const QString m_TUMBLR_FILTER_4;
     static const QString m_PHONEGRAM_FILTER;
     static const QString m_TELEGRAM_FILTER;
     static const QString m_RUNKEEPER_APP_FILTER;
